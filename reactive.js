@@ -1,15 +1,19 @@
-import { track, trigger } from './effect.js';
+ import {isObject} from "./utils.js";
+import {handlers} from "./handlers.js";
+
+
+const targets = new WeakMap();
+
 export function reactive(target) {
-    return new Proxy(target, {
-        get(target, key) {
-            // 依赖收集
-            track(target, key);
-            return target[key]; // 返回对象的相应属性值
-        },
-        set(target, key, value) {
-            // 派发更新
-            trigger(target, key);
-            return Reflect.set(target, key, value); // 设置对象的相应属性值
-        },
-    });
+    if (!isObject(target)) {
+         return target;
+    }
+
+    if(targets.has(target)) {
+        return targets.get(target);
+    }
+
+    const proxy =new Proxy(target, handlers);
+    targets.set(target, proxy);
+    return proxy;
 }
